@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -119,23 +118,18 @@ func (t *AccountChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response 
 // InitAccount Insert Account Data
 // ==============================
 func (t *AccountChaincode) initAccount(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 7 {
+	if len(args) != 6 {
 		return shim.Error("Invalid Parameters: Expecting 7 parameters")
 	}
 	var vendorJSON vendor
 
+	seq := 1
 	vendorCode := args[0]
 	bizRegistNo := args[1]
-	bankCode := args[4]
-	ctryCode := args[5]
-	owner := args[6]
+	bankCode := args[3]
+	ctryCode := args[4]
+	owner := args[5]
 	accountNumber := args[2]
-
-	seq, err := strconv.Atoi(args[3])
-
-	if err != nil {
-		return shim.Error("3rd argument must be a numeric string")
-	}
 
 	vendorCodeAsBytes, err := stub.GetState(vendorCode)
 
@@ -149,7 +143,12 @@ func (t *AccountChaincode) initAccount(stub shim.ChaincodeStubInterface, args []
 			return shim.Error("Failed to get Vendor:" + err.Error())
 		}
 		size := len(vendorJSON.Accounts)
-		fmt.Println("account exists:" + vendorCode + ",len:" + string(size))
+
+		if size >= 1 {
+			seq = size + 1
+		}
+		strFmt := fmt.Sprintf("accounts len:%d, seq:%d", size, seq)
+		fmt.Println(strFmt)
 	}
 
 	vendorJSON.VendorCode = vendorCode
